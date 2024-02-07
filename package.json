@@ -1,0 +1,27 @@
+{
+  "name": "codecademy-personal-budget",
+  "version": "1.0.0",
+  "description": "This is a [Codecademy](https://www.codecademy.com/projects/portfolio/personal-budget) project as a part of [Back-Eng Engineer Path](https://www.codecademy.com/learn/paths/back-end-engineer-career-path).",
+  "main": "app.js",
+  "scripts": {
+    "start": "npx nodemon app",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/qapush/codecademy-personal-budget.git"
+  },
+  "keywords": [],
+  "author": "qapush",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/qapush/codecademy-personal-budget/issues"
+  },
+  "homepage": "https://github.com/qapush/codecademy-personal-budget#readme",
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.3"
+  }
+}
