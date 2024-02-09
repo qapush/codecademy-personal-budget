@@ -1,37 +1,95 @@
 const express = require('express');
 const envelopesRouter = express.Router();
+const { getIndexById } = require('../utils');
 
-const envelopes = [];
-let envelopeId = 0;
+const envelopes = [
+  {
+    id: 0,
+    balance: 3500,
+    name: 'apartment',
+  },
+  {
+    id: 1,
+    balance: 1000,
+    name: 'food',
+  },
+];
+const budget = [];
+let envelopeId = envelopes.length;
 
-const newEnvelope = () => {
-    return {
-        id: envelopeId++
-    }
-}
+const newEnvelope = (name, balance) => {
+  return {
+    id: envelopeId++,
+    balance,
+    name,
+  };
+};
+
+envelopesRouter.use(express.json());
 
 envelopesRouter.param('id', (req, res, next, envelopeId) => {
-    const id = Number(envelopeId);
-    if (!id) return res.status(404).send('Invalid id parameter')
-    req.id = id;
-    next();
-})
+  const id = Number(envelopeId);
+  if (isNaN(id)) return next(new Error(`Invalid id parameter`));
+  req.id = id;
+  next();
+});
+
+const queryParams = (req, res, next) => {
+  // Amount
+  let amount = null;
+  if (req.query.amount !== 0 && !req.query.amount) {
+    amount = 0;
+  } else {
+    amount = Number(req.query.amount);
+  }
+  if (isNaN(amount)) return next(new Error('Bad amount parameter'));
+  req.amount = amount;
+
+  // Name
+  req.name = req.query.name;
+  next();
+};
+
+// METHODS
 
 envelopesRouter.get('/', (req, res, next) => {
-    res.send(envelopes);
-})
+  res.send(envelopes);
+});
 
 envelopesRouter.get('/:id', (req, res, next) => {
-    if(!envelopes[req.id]){
-        res.status(404).send(`No envelope with id ${req.id} found`)
-    } else {    
-        res.send(envelopes[req.id])
-    }
-})
+  if (!envelopes[req.id]) {
+    next(new Error(`No envelope with id ${req.id} found`));
+  } else {
+    res.send(envelopes[req.id]);
+  }
+});
 
-envelopesRouter.post('/', (req, res, next) => {
-    envelopes.push(newEnvelope());
-    res.status(201).send(envelopes[envelopes.length - 1]);
-})
+envelopesRouter.post('/', queryParams, (req, res, next) => {
+  if (!req.name) return next(new Error('Name required'));
+  envelopes.push(newEnvelope(req.name, req.amount));
+  res.status(201).send(envelopes[envelopes.length - 1]);
+});
+
+envelopesRouter.put('/:id', queryParams, (req, res, next) => {
+  const envelopeIndex = getIndexById(req.id, envelopes);
+  if (envelopeIndex === -1) return next(new Error(`No envelope with id ${req.id} found`));
+
+  if (req.name) {
+    envelopes[envelopeIndex].name = req.name;
+  }
+
+  if (req.amount) {
+    envelopes[envelopeIndex].balance = req.amount;
+  }
+
+  res.status(200).send(envelopes[envelopeIndex]);
+});
+
+// Error handling
+
+envelopesRouter.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send(err.message);
+});
 
 module.exports = envelopesRouter;
