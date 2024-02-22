@@ -14,7 +14,7 @@ const envelopes = [
     name: 'food',
   },
 ];
-const budget = [];
+
 let envelopeId = envelopes.length;
 
 const newEnvelope = (name, balance) => {
@@ -24,6 +24,10 @@ const newEnvelope = (name, balance) => {
     name,
   };
 };
+
+//
+//   MIDDLEWARES
+//
 
 envelopesRouter.use(express.json());
 
@@ -50,11 +54,17 @@ const queryParams = (req, res, next) => {
   next();
 };
 
-// METHODS
+//
+//   METHODS
+//
+
+// GET ALL ENVELOPES
 
 envelopesRouter.get('/', (req, res, next) => {
   res.send(envelopes);
 });
+
+// GET ENVELOPE BY ID
 
 envelopesRouter.get('/:id', (req, res, next) => {
   if (!envelopes[req.id]) {
@@ -64,11 +74,15 @@ envelopesRouter.get('/:id', (req, res, next) => {
   }
 });
 
+// ADD NEW ENVELPE
+
 envelopesRouter.post('/', queryParams, (req, res, next) => {
   if (!req.name) return next(new Error('Name required'));
   envelopes.push(newEnvelope(req.name, req.amount));
   res.status(201).send(envelopes[envelopes.length - 1]);
 });
+
+// CHANGE ENVELOPE BY ID
 
 envelopesRouter.put('/:id', queryParams, (req, res, next) => {
   const envelopeIndex = getIndexById(req.id, envelopes);
@@ -85,7 +99,13 @@ envelopesRouter.put('/:id', queryParams, (req, res, next) => {
   res.status(200).send(envelopes[envelopeIndex]);
 });
 
-// Error handling
+// SEND MONEY FROM ONE TO ANOTHER
+
+// 2DO
+
+//
+// ERROR HANDLING
+//
 
 envelopesRouter.use((err, req, res, next) => {
   console.error(err.stack);
