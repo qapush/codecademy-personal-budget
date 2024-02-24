@@ -1,6 +1,6 @@
 const express = require('express');
 const envelopesRouter = express.Router();
-const { getIndexById } = require('../utils');
+const { getIndexById, getEnvelopeByName } = require('../utils');
 
 const envelopes = [
   {
@@ -101,7 +101,29 @@ envelopesRouter.put('/:id', queryParams, (req, res, next) => {
 
 // SEND MONEY FROM ONE TO ANOTHER
 
-// 2DO
+envelopesRouter.post('/transfer/:nameFrom/:nameTo', (req, res, next) => {
+  
+  const amount = Number(req.body.amount); 
+
+  if(isNaN(amount)) return next( new Error('Amount should be a number'))
+  if(amount < 0) return next( new Error('Amount should be greater than zero'))
+
+  const from = getEnvelopeByName(req.params.nameFrom, envelopes);
+  const to = getEnvelopeByName(req.params.nameTo, envelopes);
+  
+  if(!from || !to ) next( new Error('Bad envelope name'));
+
+  console.log(from, to);
+  
+  // Handle insufficient funds
+  if(from.balance - amount < 0) return next( new Error('There\'s not enough funds in the source envelope for this transfer'));
+  
+  from.balance -= amount; 
+  to.balance += amount; 
+  
+  res.send(JSON.stringify({from, to}))
+
+});
 
 //
 // ERROR HANDLING
