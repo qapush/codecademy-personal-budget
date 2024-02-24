@@ -78,7 +78,7 @@ envelopesRouter.get('/:id', (req, res, next) => {
 
 envelopesRouter.post('/', queryParams, (req, res, next) => {
   if (!req.name) return next(new Error('Name required'));
-  envelopes.push(newEnvelope(req.name, req.amount));
+  envelopes.push(newEnvelope(req.name.toLowerCase(), req.amount));
   res.status(201).send(envelopes[envelopes.length - 1]);
 });
 
@@ -88,8 +88,9 @@ envelopesRouter.put('/:id', queryParams, (req, res, next) => {
   const envelopeIndex = getIndexById(req.id, envelopes);
   if (envelopeIndex === -1) return next(new Error(`No envelope with id ${req.id} found`));
 
+
   if (req.name) {
-    envelopes[envelopeIndex].name = req.name;
+    envelopes[envelopeIndex].name = req.name.toLowerCase();
   }
 
   if (req.amount) {
@@ -108,8 +109,8 @@ envelopesRouter.post('/transfer/:nameFrom/:nameTo', (req, res, next) => {
   if(isNaN(amount)) return next( new Error('Amount should be a number'))
   if(amount < 0) return next( new Error('Amount should be greater than zero'))
 
-  const from = getEnvelopeByName(req.params.nameFrom, envelopes);
-  const to = getEnvelopeByName(req.params.nameTo, envelopes);
+  const from = getEnvelopeByName(req.params.nameFrom.toLowerCase(), envelopes);
+  const to = getEnvelopeByName(req.params.nameTo.toLowerCase(), envelopes);
   
   if(!from || !to ) next( new Error('Bad envelope name'));
 
@@ -123,6 +124,17 @@ envelopesRouter.post('/transfer/:nameFrom/:nameTo', (req, res, next) => {
   
   res.send(JSON.stringify({from, to}))
 
+});
+
+// REMOVE ENVELOPE BY ID
+
+envelopesRouter.delete('/:id', queryParams, (req, res, next) => {
+  const envelopeIndex = getIndexById(req.id, envelopes);
+  if (envelopeIndex === -1) return next(new Error(`No envelope with id ${req.id} found`));
+
+  envelopes.splice(envelopeIndex, 1);
+
+  res.status(200).send(envelopes);
 });
 
 //
