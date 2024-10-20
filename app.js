@@ -10,7 +10,7 @@ app.use(cors());
 app.use('/envelopes', envelopesRouter);
 
 app.get('/', (req, res, next) => {
-  res.send('Personal budget init');
+  res.send('Personal budget');
 });
 
 app.listen(PORT, () => {

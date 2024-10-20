@@ -1,6 +1,7 @@
 const express = require('express');
 const envelopesRouter = express.Router();
 const { getIndexById, getEnvelopeByName } = require('../utils');
+const morgan = require('morgan')
 
 const envelopes = [
   {
@@ -29,19 +30,27 @@ const newEnvelope = (name, balance) => {
 //   MIDDLEWARES
 //
 
+
 envelopesRouter.use(express.json());
 
 envelopesRouter.param('id', (req, res, next, envelopeId) => {
   const id = Number(envelopeId);
-  if (isNaN(id)) return next(new Error(`Invalid id parameter`));
+  if (isNaN(id)) {
+    const err = new Error(`Invalid id parameter`);
+    err.status = 400;
+    return next(err);
+  }
   req.id = id;
   next();
 });
+envelopesRouter.use(morgan('tiny'));
+
+
 
 const queryParams = (req, res, next) => {
   // Amount
   let amount = null;
-  if (req.query.amount !== 0 && !req.query.amount) {
+  if (!req.query.amount) {
     amount = 0;
   } else {
     amount = Number(req.query.amount);
@@ -53,6 +62,7 @@ const queryParams = (req, res, next) => {
   req.name = req.query.name;
   next();
 };
+
 
 //
 //   METHODS
@@ -68,16 +78,22 @@ envelopesRouter.get('/', (req, res, next) => {
 
 envelopesRouter.get('/:id', (req, res, next) => {
   if (!envelopes[req.id]) {
-    next(new Error(`No envelope with id ${req.id} found`));
+    const err = new Error(`No envelope with id ${req.id} found`);
+    err.status = 400;
+    return next(err);
   } else {
     res.send(envelopes[req.id]);
   }
 });
 
-// ADD NEW ENVELPE
+// ADD NEW ENVELOPE
 
 envelopesRouter.post('/', queryParams, (req, res, next) => {
-  if (!req.name) return next(new Error('Name required'));
+  if (!req.name) {
+    const err = new Error('Name required');
+    err.status = 400; 
+    return next(err); 
+  }
   envelopes.push(newEnvelope(req.name.toLowerCase(), req.amount));
   res.status(201).send(envelopes[envelopes.length - 1]);
 });
@@ -86,7 +102,11 @@ envelopesRouter.post('/', queryParams, (req, res, next) => {
 
 envelopesRouter.put('/:id', queryParams, (req, res, next) => {
   const envelopeIndex = getIndexById(req.id, envelopes);
-  if (envelopeIndex === -1) return next(new Error(`No envelope with id ${req.id} found`));
+  if (envelopeIndex === -1) {
+    const err = new Error(`No envelope with id ${req.id} found`)
+    err.status = 400;
+    return next(err);
+  }
 
 
   if (req.name) {
@@ -104,7 +124,7 @@ envelopesRouter.put('/:id', queryParams, (req, res, next) => {
 
 envelopesRouter.post('/transfer/:nameFrom/:nameTo', (req, res, next) => {
   
-  const amount = Number(req.body.amount); 
+  const amount = Number(req.body.amount);  
 
   if(isNaN(amount)) return next( new Error('Amount should be a number'))
   if(amount < 0) return next( new Error('Amount should be greater than zero'))
@@ -140,10 +160,11 @@ envelopesRouter.delete('/:id', queryParams, (req, res, next) => {
 //
 // ERROR HANDLING
 //
-
 envelopesRouter.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).send(err.message);
+  // console.log(err.stack);
+  const status = err.status || 500;
+  res.status(status).send(err.message);
 });
+
 
 module.exports = envelopesRouter;
